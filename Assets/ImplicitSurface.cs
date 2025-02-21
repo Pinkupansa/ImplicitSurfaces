@@ -3,13 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
 
+[RequireComponent(typeof(MeshFilter))]
+[RequireComponent(typeof(MeshRenderer))]
 public class ImplicitSurface : MonoBehaviour
 {
     [SerializeField] ImplicitSurfaceData data; 
     [SerializeField] bool debugDraw = false;
     void Start(){
-        SkeletonData[] skeletons = (SkeletonData[])GetComponentsInChildren<Skeleton>().Select(x => x.GetData()); 
+        SkeletonData[] skeletons = GetComponentsInChildren<Skeleton>().Select(x => x.GetData()).ToArray(); 
         data.SetSkeletons(skeletons);
+
+        Mesh mesh = MarchingCubes.MarchingCubesCPU(data, transform.position);
+        GetComponent<MeshFilter>().mesh = mesh;
     }
     void OnDrawGizmos()
     {
