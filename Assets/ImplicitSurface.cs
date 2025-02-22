@@ -16,6 +16,13 @@ public class ImplicitSurface : MonoBehaviour
         Mesh mesh = MarchingCubes.MarchingCubesCPU(data, transform.position);
         GetComponent<MeshFilter>().mesh = mesh;
     }
+
+    void Update(){
+        
+        Mesh mesh = MarchingCubes.MarchingCubesCPU(data, transform.position);
+        GetComponent<MeshFilter>().mesh = mesh;
+    }
+
     void OnDrawGizmos()
     {
         for(int z = -data.halfGridSize; z < data.halfGridSize; z++){

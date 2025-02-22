@@ -35,7 +35,7 @@ public class Skeleton : MonoBehaviour{
 
 
 [Serializable]
-public struct SkeletonData
+public class SkeletonData
 {
     public float isoValue;
     public float scale; 
