@@ -290,15 +290,15 @@ public static class MCUtilities{
 		new Vector3(0, 0.5f, 1)
 	};
 
-	public static Vector3Int[] vertexOffsets = new Vector3Int[8]{
-		new Vector3Int(0, 0, 0),
-		new Vector3Int(1, 0, 0),
-		new Vector3Int(0, 0, 1), 
-		new Vector3Int(1, 0, 1),
-		new Vector3Int(0, 1, 0),
-		new Vector3Int(1, 1, 0),
-		new Vector3Int(0, 1, 1), 
-		new Vector3Int(1, 1, 1),
+	public static GridCoord[] vertexOffsets = new GridCoord[8]{
+		new GridCoord(0, 0, 0),
+		new GridCoord(1, 0, 0),
+		new GridCoord(0, 0, 1), 
+		new GridCoord(1, 0, 1),
+		new GridCoord(0, 1, 0),
+		new GridCoord(1, 1, 0),
+		new GridCoord(0, 1, 1), 
+		new GridCoord(1, 1, 1),
 	};
 
 }

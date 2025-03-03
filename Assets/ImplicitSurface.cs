@@ -62,15 +62,13 @@ public class ImplicitSurfaceData{
     public void SetSkeletons(SkeletonData[] _skeletons){
         skeletons = _skeletons;
     }
-    public (float, float) EvaluatePotGrad(Vector3 point){
+    public float EvaluatePot(Vector3 point){
         float sumPot = 0;
-        float sumGrad = 0; 
         foreach(SkeletonData s in skeletons){
-           (float, float) potGrad = ISUtilities.EvaluatePotentialAndGradient(s, point); 
-           sumPot += potGrad.Item1;
-           sumGrad += potGrad.Item2;
+           float pot = ISUtilities.EvaluateQuarticMetaballPotential(((point - s.position)/s.scale).sqrMagnitude); 
+           sumPot += pot;
         }
-        return (sumPot, sumGrad);
+        return sumPot;
     }
 }
 

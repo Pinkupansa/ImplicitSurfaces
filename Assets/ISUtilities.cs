@@ -19,18 +19,33 @@ public static class ISUtilities
         return null;
     }
 
+    static Func<float, float> GetPotFunction(POTENTIAL_FUNCTION func){
+        switch(func){
+            case POTENTIAL_FUNCTION.QUARTIC_METABALL:
+                return EvaluateQuarticMetaballPotential;
+        }
+        return null;
+    }
+
     public static (float, float)EvaluatePotentialAndGradient(SkeletonData surface, Vector3 point){
         float r2 = ((surface.position - point)/surface.scale).sqrMagnitude;
         return GetPotGradFunction(surface.potentialFunction)(r2);
     }
 
+    public static float EvaluatePotential(SkeletonData surface, Vector3 point){
+        float r2 = ((surface.position - point)/surface.scale).sqrMagnitude;
+        return GetPotFunction(surface.potentialFunction)(r2);
+    }
     static (float, float) EvaluateQuarticMetaballPotentialAndGradient(float r2){
         if(r2 > 0.49) return (0, 0); 
         float r = Mathf.Sqrt(r2);
-        return (r2*(r2 - 1) + 0.25f, r*(4*r2 - 2));
+        return (EvaluateQuarticMetaballPotential(r2), r*(4*r2 - 2));
     }
 
-
+    public static float EvaluateQuarticMetaballPotential(float r2){
+        if(r2 > 0.49) return 0;
+        return r2*(r2-1) + 0.25f;
+    }
 
 
     public static float DichotomicSearch(SkeletonData surf){
