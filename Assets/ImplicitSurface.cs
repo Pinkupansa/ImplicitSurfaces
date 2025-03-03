@@ -25,24 +25,24 @@ public class ImplicitSurface : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        for(int z = -data.halfGridSize; z < data.halfGridSize; z++){
+        for(int z = -data.gridSize/2; z < data.gridSize/2f; z++){
 
-            for(int x = -data.halfGridSize; x < data.halfGridSize; x++){
-                Vector3 startPoint = transform.position + data.gridStep*new Vector3(x, -data.halfGridSize, z);
-                Vector3 endPoint = startPoint + new Vector3(0, 2*data.halfGridSize - 1, 0)*data.gridStep;
+            for(int x = -data.gridSize/2; x < data.gridSize/2f; x++){
+                Vector3 startPoint = transform.position + data.gridStep*new Vector3(x, -data.gridSize/2, z);
+                Vector3 endPoint = startPoint + new Vector3(0, data.gridSize, 0)*data.gridStep;
                 Gizmos.DrawLine(startPoint, endPoint);
             }
-            for(int y = -data.halfGridSize; y < data.halfGridSize; y++){
-                Vector3 startPoint = transform.position + data.gridStep*new Vector3(-data.halfGridSize, y, z);
-                Vector3 endPoint = startPoint + new Vector3(2*data.halfGridSize - 1,0 , 0)*data.gridStep;
+            for(int y = -data.gridSize/2; y < data.gridSize/2f; y++){
+                Vector3 startPoint = transform.position + data.gridStep*new Vector3(-data.gridSize/2, y, z);
+                Vector3 endPoint = startPoint + new Vector3(data.gridSize,0 , 0)*data.gridStep;
                 Gizmos.DrawLine(startPoint, endPoint);
             }
         }
-        for(int x = -data.halfGridSize; x < data.halfGridSize; x++){
+        for(int x = -data.gridSize/2; x < data.gridSize/2f; x++){
 
-            for(int y = -data.halfGridSize; y < data.halfGridSize; y++){
-                Vector3 startPoint = transform.position + data.gridStep*new Vector3(x, y, -data.halfGridSize);
-                Vector3 endPoint = startPoint + new Vector3(0 , 0, 2*data.halfGridSize - 1)*data.gridStep;
+            for(int y = -data.gridSize/2; y < data.gridSize/2f; y++){
+                Vector3 startPoint = transform.position + data.gridStep*new Vector3(x, y, -data.gridSize/2);
+                Vector3 endPoint = startPoint + new Vector3(0 , 0, data.gridSize)*data.gridStep;
                 Gizmos.DrawLine(startPoint, endPoint);
             }
         }
@@ -52,7 +52,7 @@ public class ImplicitSurface : MonoBehaviour
 [System.Serializable]
 public class ImplicitSurfaceData{
 
-    public int halfGridSize;
+    public int gridSize;
     public float gridStep;
 
     SkeletonData[] skeletons; 

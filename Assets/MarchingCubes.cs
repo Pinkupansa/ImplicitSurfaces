@@ -2,26 +2,28 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using NUnit.Framework;
+using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
 
 public static class MarchingCubes 
 {
-    
-    static float EvaluatePoint(Vector3Int coord, float gridStep, Vector3 basePoint, ImplicitSurfaceData surface, Dictionary<Vector3Int, float> gridPotentials){
-        if(gridPotentials.ContainsKey(coord)) return gridPotentials[coord];
 
-        float pot = surface.EvaluatePotGrad((Vector3)coord*gridStep + basePoint).Item1;
-        gridPotentials.Add(coord, pot);
-        return pot;
+    static float EvaluatePoint(Vector3Int coord, float gridStep, Vector3 basePoint, ImplicitSurfaceData surface, float[,,] gridPotentials, bool[,,] evaluatedPoints){
+        if(!evaluatedPoints[coord.x, coord.y, coord.z]){
+            gridPotentials[coord.x, coord.y, coord.z] = surface.EvaluatePotGrad((Vector3) coord*gridStep + basePoint).Item1;
+            evaluatedPoints[coord.x, coord.y, coord.z] = true;
+        }
+        return gridPotentials[coord.x, coord.y, coord.z];
     }
-    static float[] EvaluateCube(Vector3Int baseCornerCoord, float gridStep, Vector3 basePoint, ImplicitSurfaceData surface, Dictionary<Vector3Int, float> gridPotentials){
+    static float[] EvaluateCube(Vector3Int baseCornerCoord, float gridStep, Vector3 basePoint, ImplicitSurfaceData surface, float[,,] gridPotentials, bool[,,] evaluatedPoints){
 
         float[] cornerPotentials = new float[8];
         for(int i = 0; i < 8; i++){
             Vector3Int point = baseCornerCoord + MCUtilities.vertexOffsets[i];
-            cornerPotentials[i] = EvaluatePoint(point, gridStep, basePoint, surface, gridPotentials);
+            cornerPotentials[i] = EvaluatePoint(point, gridStep, basePoint, surface, gridPotentials, evaluatedPoints);
         }
         return cornerPotentials;
     }
@@ -37,10 +39,10 @@ public static class MarchingCubes
         return cubeCase;
     }
 
-    public static Mesh MarchingCubesCPU(ImplicitSurfaceData surface, Vector3 basePoint){
+    public static Mesh MarchingCubesCPU(ImplicitSurfaceData surface, Vector3 centerPoint){
 
 		float gridStep = surface.gridStep;
-		int gridSize = surface.halfGridSize;
+		int gridSize = surface.gridSize;
 
         Mesh mesh = new Mesh();
 
@@ -52,17 +54,18 @@ public static class MarchingCubes
         //positions of the center of edges which will serve as vertices
         List<Vector3> edgesPositions = new List<Vector3>();
 
-        Dictionary<Vector3Int, float> gridPotentials = new Dictionary<Vector3Int, float>();
-
+        float[,,] gridPotentials = new float[gridSize, gridSize, gridSize];
+        bool[,,] evaluatedPoints = new bool[gridSize, gridSize, gridSize];
         //a list of edge indices to read in triplets to obtain the mesh triangles
         List<int> triangles = new List<int>();
+        Vector3 basePoint = centerPoint - gridSize/2f * gridStep * Vector3.one;
 
-        for(int x = -gridSize; x < gridSize; x++){
-            for(int y = -gridSize; y < gridSize; y++){ 
-                for(int z = -gridSize; z < gridSize; z++){
+        for(int x = 0; x < gridSize-1; x++){ //stop iterations at -1 because EvaluateCube looks at +1
+            for(int y = 0; y < gridSize-1; y++){ 
+                for(int z = 0; z < gridSize-1; z++){
                 
                     Vector3Int currentCoord = new Vector3Int(x, y ,z); 
-					int cubeCase = IdentifyCubeCase(EvaluateCube(currentCoord, gridStep, basePoint, surface, gridPotentials));
+					int cubeCase = IdentifyCubeCase(EvaluateCube(currentCoord, gridStep, basePoint, surface, gridPotentials, evaluatedPoints));
                     //the local indices of the edges forming the triangles
                     int[] localTriangles = MCUtilities.triTable[cubeCase];
 
@@ -91,6 +94,7 @@ public static class MarchingCubes
         mesh.vertices = edgesPositions.ToArray();
         mesh.triangles = triangles.ToArray();
         mesh.RecalculateNormals(); 
+
         return mesh; 
     }
 }
@@ -118,5 +122,4 @@ public class Edge{
     {
        return u.GetHashCode() + v.GetHashCode(); 
     }
-
 }
