@@ -2,18 +2,26 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using NUnit.Framework;
 using UnityEditor.Rendering;
 using UnityEngine;
 
 public static class MarchingCubes 
 {
-	
-    static float[] EvaluateCube(Vector3 baseCorner, float gridStep, ImplicitSurfaceData surface){
+    
+    static float EvaluatePoint(Vector3Int coord, float gridStep, Vector3 basePoint, ImplicitSurfaceData surface, Dictionary<Vector3Int, float> gridPotentials){
+        if(gridPotentials.ContainsKey(coord)) return gridPotentials[coord];
+
+        float pot = surface.EvaluatePotGrad((Vector3)coord*gridStep + basePoint).Item1;
+        gridPotentials.Add(coord, pot);
+        return pot;
+    }
+    static float[] EvaluateCube(Vector3Int baseCornerCoord, float gridStep, Vector3 basePoint, ImplicitSurfaceData surface, Dictionary<Vector3Int, float> gridPotentials){
 
         float[] cornerPotentials = new float[8];
         for(int i = 0; i < 8; i++){
-            Vector3 point = baseCorner + (Vector3)MCUtilities.vertexOffsets[i] * gridStep;
-            cornerPotentials[i] = surface.EvaluatePotGrad(point).Item1;
+            Vector3Int point = baseCornerCoord + MCUtilities.vertexOffsets[i];
+            cornerPotentials[i] = EvaluatePoint(point, gridStep, basePoint, surface, gridPotentials);
         }
         return cornerPotentials;
     }
@@ -44,16 +52,17 @@ public static class MarchingCubes
         //positions of the center of edges which will serve as vertices
         List<Vector3> edgesPositions = new List<Vector3>();
 
+        Dictionary<Vector3Int, float> gridPotentials = new Dictionary<Vector3Int, float>();
+
         //a list of edge indices to read in triplets to obtain the mesh triangles
-        List<int> triangles = new List<int>(); 
+        List<int> triangles = new List<int>();
 
         for(int x = -gridSize; x < gridSize; x++){
             for(int y = -gridSize; y < gridSize; y++){ 
                 for(int z = -gridSize; z < gridSize; z++){
                 
                     Vector3Int currentCoord = new Vector3Int(x, y ,z); 
-                    Vector3 currentPoint = (Vector3)currentCoord*gridStep + basePoint;
-					int cubeCase = IdentifyCubeCase(EvaluateCube(currentPoint, gridStep, surface));
+					int cubeCase = IdentifyCubeCase(EvaluateCube(currentCoord, gridStep, basePoint, surface, gridPotentials));
                     //the local indices of the edges forming the triangles
                     int[] localTriangles = MCUtilities.triTable[cubeCase];
 
@@ -81,7 +90,7 @@ public static class MarchingCubes
 
         mesh.vertices = edgesPositions.ToArray();
         mesh.triangles = triangles.ToArray();
-        
+        mesh.RecalculateNormals(); 
         return mesh; 
     }
 }
