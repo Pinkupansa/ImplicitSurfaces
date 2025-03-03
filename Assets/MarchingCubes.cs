@@ -54,7 +54,6 @@ public static class MarchingCubes
                     Vector3Int currentCoord = new Vector3Int(x, y ,z); 
                     Vector3 currentPoint = (Vector3)currentCoord*gridStep + basePoint;
 					int cubeCase = IdentifyCubeCase(EvaluateCube(currentPoint, gridStep, surface));
-				 	Debug.Log(cubeCase);
                     //the local indices of the edges forming the triangles
                     int[] localTriangles = MCUtilities.triTable[cubeCase];
 

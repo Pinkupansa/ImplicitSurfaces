@@ -9,18 +9,18 @@ public class ImplicitSurface : MonoBehaviour
 {
     [SerializeField] ImplicitSurfaceData data; 
     [SerializeField] bool debugDraw = false;
+    [SerializeField] Material material;
     void Start(){
         SkeletonData[] skeletons = GetComponentsInChildren<Skeleton>().Select(x => x.GetData()).ToArray(); 
         data.SetSkeletons(skeletons);
 
-        Mesh mesh = MarchingCubes.MarchingCubesCPU(data, transform.position);
-        GetComponent<MeshFilter>().mesh = mesh;
     }
 
     void Update(){
         
         Mesh mesh = MarchingCubes.MarchingCubesCPU(data, transform.position);
         GetComponent<MeshFilter>().mesh = mesh;
+        GetComponent<MeshRenderer>().sharedMaterial = material;
     }
 
     void OnDrawGizmos()
