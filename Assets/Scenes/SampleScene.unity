@@ -358,7 +358,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   data:
-    gridSize: 35
+    gridSize: 65
     gridStep: 0.03
   debugDraw: 0
   material: {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
