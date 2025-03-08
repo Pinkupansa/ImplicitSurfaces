@@ -62,12 +62,6 @@ public class ImplicitSurfaceData{
     public void SetSkeletons(SkeletonData[] _skeletons){
         skeletons = _skeletons;
     }
-    public SkeletonData GetSkeleton(int i){
-        return skeletons[i];
-    }
-    public int GetNumberOfSkeletons(){
-        return skeletons.Length;
-    }
     public float EvaluatePot(Vector3 point){
         float sumPot = 0;
         foreach(SkeletonData s in skeletons){
