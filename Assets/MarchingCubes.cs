@@ -7,7 +7,9 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Security.Cryptography.X509Certificates;
 using NUnit.Framework;
 using NUnit.Framework.Constraints;
+using Unity.PlasticSCM.Editor.WebApi;
 using Unity.VisualScripting;
+using UnityEditor;
 using UnityEditor.Rendering;
 using UnityEngine;
 
@@ -24,7 +26,6 @@ public static class MarchingCubes
     static Dictionary<Edge, int> edgeIndices;
     static List<Vector3> edgePositions;
     static List<int> triangles;
-
     
     static float EvaluatePoint(GridCoord coord){
         if(!evaluatedPoints[coord.x, coord.y, coord.z]){
@@ -82,6 +83,8 @@ public static class MarchingCubes
             triangles.Add(edgeIndices[e]); 
         }
     }
+
+
     public static Mesh MarchingCubesCPU(ImplicitSurfaceData _surface, Vector3 centerPoint){
         surface = _surface;
         gridStep = surface.gridStep;
@@ -103,27 +106,67 @@ public static class MarchingCubes
         triangles = new List<int>();
         basePoint = centerPoint - gridSize/2f * gridStep * Vector3.one;
 
-        for(int x = 0; x < gridSize-1; x++){ //stop iterations at -1 because EvaluateCube looks at +1
-            for(int y = 0; y < gridSize-1; y++){ 
-                for(int z = 0; z < gridSize-1; z++){
-                
-                    GridCoord currentCoord = new GridCoord(x, y ,z); 
-                    int cubeCase = IdentifyCubeCase(EvaluateCube(currentCoord));
-                    //the local indices of the edges forming the triangles
-                    int[] localTriangles = MCUtilities.triTable[cubeCase];
-
-                    AddTriangles(localTriangles, currentCoord);
-                }
-            } 
+        for(int i = 0; i < surface.GetNumberOfSkeletons(); i++){
+            GenerateConnectedComponent(FindComponentStartingCube(PositionToGridCoord(surface.GetSkeleton(i).position)));
         }
 
-            mesh.vertices = edgePositions.ToArray();
-            mesh.triangles = triangles.ToArray();
-            mesh.RecalculateNormals(); 
+        mesh.vertices = edgePositions.ToArray();
+        mesh.triangles = triangles.ToArray();
+        mesh.RecalculateNormals(); 
 
-            return mesh; 
+        return mesh; 
+    }
+    
+    static GridCoord PositionToGridCoord(Vector3 position){
+        Vector3 v = (position - basePoint)/gridStep; 
+        return new GridCoord(Mathf.RoundToInt(v.x), Mathf.RoundToInt(v.y), Mathf.RoundToInt(v.z));
+    }
+    static bool IsFullyInsideGrid(GridCoord coord){
+        return coord.x > 0 && coord.x <= gridSize - 2 && coord.y > 0 && coord.y <= gridSize - 2 && coord.z > 0 && coord.z <= gridSize - 2;
+    }
+    static bool IsInsideGrid(GridCoord coord){
+
+        return coord.x >= 0 && coord.x <= gridSize - 1 && coord.y >= 0 && coord.y <= gridSize - 1 && coord.z >= 0 && coord.z <= gridSize - 1;
+    }
+    static GridCoord FindComponentStartingCube(GridCoord insidePoint){ 
+        
+        for(int i = 1; i < gridSize; i++){
+            GridCoord trialPointX = new GridCoord(insidePoint.x + i, insidePoint.y, insidePoint.z);
+            if(IsInsideGrid(trialPointX) && EvaluatePoint(trialPointX) < 0){
+                return new GridCoord(insidePoint.x + i - 1, insidePoint.y, insidePoint.z);
+            }
+        }
+        return new GridCoord(0, 0, 0);
+    }
+    static void GenerateConnectedComponent(GridCoord startingCube){
+        Queue<GridCoord> cubeQueue = new Queue<GridCoord>(); 
+        cubeQueue.Enqueue(startingCube);
+
+        bool [,,] visitedCubes = new bool[gridSize, gridSize, gridSize];
+
+        while(cubeQueue.Count > 0){
+            GridCoord currentCoord = cubeQueue.Dequeue();
+            //todo : check if already done or if outside the grid
+            if(!visitedCubes[currentCoord.x, currentCoord.y, currentCoord.z]){
+                int[] localTriangles = MCUtilities.triTable[IdentifyCubeCase(EvaluateCube(currentCoord))];
+                if(localTriangles[0] != -1){
+                    //todo : Add triangles and Enqueue neighbours 
+                    AddTriangles(localTriangles, currentCoord);
+                    for(int x = -1; x <= 1; x ++)
+                        for(int y = -1; y <= 1; y ++)
+                            for(int z = -1;  z <= 1; z++){
+                                if(x == 0 && y == 0 && z == 0) continue;
+                                GridCoord newCoord = new GridCoord(currentCoord.x + x, currentCoord.y + y, currentCoord.z + z);
+                                if(IsFullyInsideGrid(newCoord) && !visitedCubes[newCoord.x, newCoord.y, newCoord.z]){
+                                    cubeQueue.Enqueue(newCoord);
+                                }
+                            }
+                }
+                visitedCubes[currentCoord.x, currentCoord.y, currentCoord.z] = true;
+            }
         }
     }
+}
 
 public class Edge{
     GridCoord u;
@@ -146,7 +189,7 @@ public class Edge{
 
     public override int GetHashCode()
     {
-       return u.GetHashCode() * v.GetHashCode(); 
+       return u.GetHashCode() + v.GetHashCode();
     }
 }
 
