@@ -333,8 +333,8 @@ public static class MCUtilities{
 
 		new int[]{11, 9, 10},
 		new int[]{10, 8, 11},
-		new int[]{9, 10, 8},
-		new int[]{8, 11, 9},
+		new int[]{9, 11, 8},
+		new int[]{8, 10, 9},
 	};
 
 }
