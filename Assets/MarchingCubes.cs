@@ -1,17 +1,6 @@
-using System;
-using System.Buffers.Text;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO.Compression;
-using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Security.Cryptography.X509Certificates;
 using NUnit.Framework;
-using NUnit.Framework.Constraints;
-using Unity.PlasticSCM.Editor.WebApi;
-using Unity.VisualScripting;
-using UnityEditor;
-using UnityEditor.Rendering;
 using UnityEngine;
 
 public static class MarchingCubes 
@@ -79,7 +68,7 @@ public static class MarchingCubes
                 edgePositions.Add(InterpolateMeshVertexPosition(ext1GridCoord, ext2GridCoord));
             }
             //add the next vertex index of the triangle array
-            triangles.Add(edgeIndex); 
+            triangles.Add(edgeIndex - 1); 
         }
     }
      
@@ -87,7 +76,7 @@ public static class MarchingCubes
     static bool FindOrAddEdgeMeshIndex(GridCoord cube, int edgeLocalIndex, out int edgeIndex){ 
         for(int i = 0; i < 3; i++){
             GridCoord neighbour = cube + MCUtilities.neighboursWithCommonEdge[edgeLocalIndex][i];
-            if(!IsInsideGrid(neighbour)) continue; 
+            if(!IsInsideGrid(neighbour) || !visitedCubes[neighbour.x, neighbour.y, neighbour.z]) continue; 
 
             int index = edgeIndices[neighbour.x, neighbour.y, neighbour.z, MCUtilities.localIndexInNeighbours[edgeLocalIndex][i]];
             if(index != 0){
@@ -96,7 +85,7 @@ public static class MarchingCubes
             }
         }
         //edge index has not been found 
-        int newIndex = edgePositions.Count;
+        int newIndex = edgePositions.Count + 1;
         edgeIndices[cube.x, cube.y, cube.z, edgeLocalIndex] = newIndex;
         edgeIndex = newIndex;
         return false; 
@@ -109,6 +98,7 @@ public static class MarchingCubes
 
         Mesh mesh = new Mesh();
 
+        
         //vertices of the mesh will be on edges
 
         //table to keep track of the global edge indices in the mesh vertex array
@@ -119,6 +109,7 @@ public static class MarchingCubes
 
         gridPotentials = new float[gridSize, gridSize, gridSize];
         evaluatedPoints = new bool[gridSize, gridSize, gridSize];
+
         //a list of edge indices to read in triplets to obtain the mesh triangles
         triangles = new List<int>();
         basePoint = centerPoint - gridSize/2f * gridStep * Vector3.one;
@@ -157,13 +148,13 @@ public static class MarchingCubes
         return new GridCoord(0, 0, 0);
     }
     static void GenerateConnectedComponent(GridCoord startingCube){
+        if(!IsFullyInsideGrid(startingCube)) return;
         Queue<GridCoord> cubeQueue = new Queue<GridCoord>(); 
         cubeQueue.Enqueue(startingCube);
 
-
+        
         while(cubeQueue.Count > 0){
             GridCoord currentCoord = cubeQueue.Dequeue();
-            //todo : check if already done or if outside the grid
             if(!visitedCubes[currentCoord.x, currentCoord.y, currentCoord.z]){
                 int[] localTriangles = MCUtilities.triTable[IdentifyCubeCase(EvaluateCube(currentCoord))];
                 if(localTriangles[0] != -1){
