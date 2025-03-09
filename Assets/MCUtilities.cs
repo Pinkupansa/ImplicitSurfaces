@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public static class MCUtilities{
@@ -301,4 +302,71 @@ public static class MCUtilities{
 		new GridCoord(1, 1, 1),
 	};
 
+	public static int[] doubleEdgeOffsetToEdgeIndex = new int[27]{-1, 0, -1, 8, -1, 9, -1, 4, -1, 3, -1, 1, -1, -1, -1, 7, -1, 5, -1, 2, -1, 11, -1, 10, -1, 6, -1};
+	public static GridCoord[][] neighboursWithCommonEdge = new GridCoord[][]{
+		new GridCoord[]{new GridCoord(0, -1, 0), new GridCoord(0, 0, -1), new GridCoord(0, -1, -1)},
+		new GridCoord[]{new GridCoord(0, -1, 0), new GridCoord(1, 0, 0), new GridCoord(1, -1, 0)},
+		new GridCoord[]{new GridCoord(0, -1, 0), new GridCoord(0, 0, 1), new GridCoord(0, -1, 1)},
+		new GridCoord[]{new GridCoord(0, -1, 0), new GridCoord(-1, 0, 0), new GridCoord(-1, -1, 0)},
+		
+		new GridCoord[]{new GridCoord(0, 1, 0), new GridCoord(0, 0, -1), new GridCoord(0, 1, -1)},
+		new GridCoord[]{new GridCoord(0, 1, 0), new GridCoord(1, 0, 0), new GridCoord(1, 1, 0)},
+		new GridCoord[]{new GridCoord(0, 1, 0), new GridCoord(0, 0, 1), new GridCoord(0, 1, 1)},
+		new GridCoord[]{new GridCoord(0, 1, 0), new GridCoord(-1, 0, 0), new GridCoord(-1, 1, 0)},	
+		
+		new GridCoord[]{new GridCoord(0, 0, -1), new GridCoord(-1, 0, 0), new GridCoord(-1, 0, -1)},
+		new GridCoord[]{new GridCoord(0, 0, -1), new GridCoord(1, 0, 0), new GridCoord(1, 0, -1)},
+		new GridCoord[]{new GridCoord(0, 0, 1), new GridCoord(1, 0, 0), new GridCoord(1, 0, 1)},
+		new GridCoord[]{new GridCoord(0, 0, 1), new GridCoord(-1, 0, 0), new GridCoord(-1, 0, 1)},
+	};
+
+	public static int[][] localIndexInNeighbours = new int[][]{
+		new int[]{4, 2, 6},
+		new int[]{5, 3, 7},
+		new int[]{6, 0, 4},
+		new int[]{7, 1, 5},
+
+		new int[]{0, 6, 2},
+		new int[]{1, 7, 3},
+		new int[]{2, 4, 0},
+		new int[]{3, 5, 1},
+
+		new int[]{11, 9, 10},
+		new int[]{10, 8, 11},
+		new int[]{9, 10, 8},
+		new int[]{8, 11, 9},
+	};
+
+}
+
+public struct GridCoord : IEquatable<GridCoord> {
+    public int x, y, z;
+    
+    public GridCoord(int _x, int _y, int _z) {
+        x = _x; y = _y; z = _z;
+    }
+    
+    public override bool Equals(object obj) => 
+        obj is GridCoord other && Equals(other);
+    
+    public bool Equals(GridCoord other) => 
+        x == other.x && y == other.y && z == other.z;
+    
+    public override int GetHashCode() => 
+        HashCode.Combine(x, y, z);
+    
+    public static GridCoord operator +(GridCoord a, GridCoord b) => new GridCoord(a.x+b.x, a.y+b.y, a.z + b.z);
+    public static bool operator == (GridCoord a, GridCoord b) => a.Equals(b);
+    public static bool operator != (GridCoord a, GridCoord b) => !a.Equals(b);
+    public static implicit operator Vector3(GridCoord coord){
+        return new Vector3(coord.x, coord.y, coord.z);
+    }
+    
+    // Explicit conversion from Vector3 to GridCoord - requires explicit cast
+    public static explicit operator GridCoord(Vector3 vec)
+    {
+        return new GridCoord((int)vec.x, (int)vec.y, (int)vec.z);
+    }
+
+    
 }

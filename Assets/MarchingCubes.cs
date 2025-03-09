@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Text;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO.Compression;
@@ -23,10 +24,11 @@ public static class MarchingCubes
     static ImplicitSurfaceData surface; 
     static float[,,] gridPotentials; 
     static bool[,,] evaluatedPoints;
-    static Dictionary<Edge, int> edgeIndices;
+    static int[,,,] edgeIndices;
     static List<Vector3> edgePositions;
     static List<int> triangles;
-    
+    static bool[,,] visitedCubes; 
+
     static float EvaluatePoint(GridCoord coord){
         if(!evaluatedPoints[coord.x, coord.y, coord.z]){
             gridPotentials[coord.x, coord.y, coord.z] = surface.EvaluatePot((Vector3)coord*gridStep + basePoint) - ISOPOTENTIAL;
@@ -69,21 +71,36 @@ public static class MarchingCubes
             
             //calculate the global coords of the edge extremities 
             int[] edgeExtLocalIndices = MCUtilities.edgeTable[localTriangles[i]];
-            GridCoord ext1GridCoord = currentCoord + MCUtilities.vertexOffsets[edgeExtLocalIndices[0]];
-            GridCoord ext2GridCoord = currentCoord + MCUtilities.vertexOffsets[edgeExtLocalIndices[1]];
-            Edge e = new Edge(ext1GridCoord, ext2GridCoord);
 
-            if(!edgeIndices.ContainsKey(e)){
-                //add this edge as a vertex
-                edgeIndices.Add(e, edgeIndices.Count);
+            int edgeIndex = -1;
+            if(!FindOrAddEdgeMeshIndex(currentCoord, localTriangles[i], out edgeIndex)){
+                GridCoord ext1GridCoord = currentCoord + MCUtilities.vertexOffsets[edgeExtLocalIndices[0]];
+                GridCoord ext2GridCoord = currentCoord + MCUtilities.vertexOffsets[edgeExtLocalIndices[1]];
                 edgePositions.Add(InterpolateMeshVertexPosition(ext1GridCoord, ext2GridCoord));
             }
-
             //add the next vertex index of the triangle array
-            triangles.Add(edgeIndices[e]); 
+            triangles.Add(edgeIndex); 
         }
     }
+     
 
+    static bool FindOrAddEdgeMeshIndex(GridCoord cube, int edgeLocalIndex, out int edgeIndex){ 
+        for(int i = 0; i < 3; i++){
+            GridCoord neighbour = cube + MCUtilities.neighboursWithCommonEdge[edgeLocalIndex][i];
+            if(!IsInsideGrid(neighbour)) continue; 
+
+            int index = edgeIndices[neighbour.x, neighbour.y, neighbour.z, MCUtilities.localIndexInNeighbours[edgeLocalIndex][i]];
+            if(index != 0){
+                edgeIndex = index;
+                return true;
+            }
+        }
+        //edge index has not been found 
+        int newIndex = edgePositions.Count;
+        edgeIndices[cube.x, cube.y, cube.z, edgeLocalIndex] = newIndex;
+        edgeIndex = newIndex;
+        return false; 
+    }
 
     public static Mesh MarchingCubesCPU(ImplicitSurfaceData _surface, Vector3 centerPoint){
         surface = _surface;
@@ -95,7 +112,7 @@ public static class MarchingCubes
         //vertices of the mesh will be on edges
 
         //table to keep track of the global edge indices in the mesh vertex array
-        edgeIndices = new Dictionary<Edge, int>(); 
+        edgeIndices = new int[gridSize, gridSize, gridSize, 12];
         
         //positions of the center of edges which will serve as vertices
         edgePositions = new List<Vector3>();
@@ -105,6 +122,7 @@ public static class MarchingCubes
         //a list of edge indices to read in triplets to obtain the mesh triangles
         triangles = new List<int>();
         basePoint = centerPoint - gridSize/2f * gridStep * Vector3.one;
+        visitedCubes = new bool[gridSize, gridSize, gridSize];
 
         for(int i = 0; i < surface.GetNumberOfSkeletons(); i++){
             GenerateConnectedComponent(FindComponentStartingCube(PositionToGridCoord(surface.GetSkeleton(i).position)));
@@ -142,7 +160,6 @@ public static class MarchingCubes
         Queue<GridCoord> cubeQueue = new Queue<GridCoord>(); 
         cubeQueue.Enqueue(startingCube);
 
-        bool [,,] visitedCubes = new bool[gridSize, gridSize, gridSize];
 
         while(cubeQueue.Count > 0){
             GridCoord currentCoord = cubeQueue.Dequeue();
@@ -191,37 +208,4 @@ public class Edge{
     {
        return u.GetHashCode() + v.GetHashCode();
     }
-}
-
-
-// Define a struct with better equality comparison
-public struct GridCoord : IEquatable<GridCoord> {
-    public int x, y, z;
-    
-    public GridCoord(int _x, int _y, int _z) {
-        x = _x; y = _y; z = _z;
-    }
-    
-    public override bool Equals(object obj) => 
-        obj is GridCoord other && Equals(other);
-    
-    public bool Equals(GridCoord other) => 
-        x == other.x && y == other.y && z == other.z;
-    
-    public override int GetHashCode() => 
-        HashCode.Combine(x, y, z);
-    
-    public static GridCoord operator +(GridCoord a, GridCoord b) => new GridCoord(a.x+b.x, a.y+b.y, a.z + b.z);
-    public static bool operator == (GridCoord a, GridCoord b) => a.Equals(b);
-    public static bool operator != (GridCoord a, GridCoord b) => !a.Equals(b);
-    public static implicit operator Vector3(GridCoord coord){
-        return new Vector3(coord.x, coord.y, coord.z);
-    }
-    
-    // Explicit conversion from Vector3 to GridCoord - requires explicit cast
-    public static explicit operator GridCoord(Vector3 vec)
-    {
-        return new GridCoord((int)vec.x, (int)vec.y, (int)vec.z);
-    }
-
 }
