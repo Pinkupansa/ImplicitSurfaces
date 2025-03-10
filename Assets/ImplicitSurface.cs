@@ -25,6 +25,7 @@ public class ImplicitSurface : MonoBehaviour
 
     void OnDrawGizmos()
     {
+        if(!debugDraw) return;
         for(int z = -data.gridSize/2; z < data.gridSize/2f; z++){
 
             for(int x = -data.gridSize/2; x < data.gridSize/2f; x++){

@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using TMPro;
+using System.Linq;
+using NUnit.Framework.Constraints;
 public class DrawingUtilities : MonoBehaviour{
 
     public static DrawingUtilities instance; 
@@ -32,12 +34,37 @@ public class DrawingUtilities : MonoBehaviour{
         
     }
 
+    public void Clear(){
+        Dictionary<string, GameObject> drawingsCopy = drawings.ToDictionary(entry => entry.Key, entry => entry.Value);
+        foreach(string name in drawingsCopy.Keys){
+            DestroyDrawing(name);
+        }
+    }
+    public void DestroyDrawing(string name){
+        if(!drawings.ContainsKey(name)) return;
+        Destroy(drawings[name]);
+        drawings.Remove(name);
+
+        if(!labels.ContainsKey(name)) return;
+        Destroy(labels[name]);
+        labels.Remove(name);
+
+        if(!highlightedObjectsBaseColor.ContainsKey(name)) return;
+        highlightedObjectsBaseColor.Remove(name);
+    }
     public void ScaleObject(string name, float amount){
         
         if(!drawings.ContainsKey(name)) return;
         GameObject drawing = drawings[name];
 
         drawings[name].transform.localScale *= amount;
+    }
+
+    public void DisplaceObject(string name, Vector3 pos){
+        if(!drawings.ContainsKey(name)) return;
+        drawings[name].transform.position = pos;
+        if(!labels.ContainsKey(name)) return;
+        labels[name].gameObject.transform.position = drawings[name].transform.position + Vector3.up*drawings[name].transform.localScale.y;
     }
     
     public void DrawLine(Vector3 pos1, Vector3 pos2, float thickness, string name = ""){
@@ -53,6 +80,7 @@ public class DrawingUtilities : MonoBehaviour{
 
     public void LabelObject(string name, string label){
         if(!drawings.ContainsKey(name)) return;
+        if(labels.ContainsKey(name)) return;
         GameObject drawing = drawings[name];
 
         GameObject text = Instantiate(textPrefab);
@@ -60,19 +88,6 @@ public class DrawingUtilities : MonoBehaviour{
         text.GetComponent<TMP_Text>().text = label; 
         labels.Add(name, text.GetComponent<TMP_Text>());
         text.transform.localScale *= drawing.transform.localScale.x*2;
-    }
-
-    public void DestroyObject(string name){ 
-        if(!drawings.ContainsKey(name)) return;
-        GameObject drawing = drawings[name];
-
-        drawings.Remove(name);
-        Destroy(drawing);
-
-        TMP_Text label = labels[name];
-        if(label == null) return; 
-        labels.Remove(name);
-        Destroy(label.gameObject); 
     }
 
     public void DrawLine(string name1, string name2, float thickness, string name = ""){

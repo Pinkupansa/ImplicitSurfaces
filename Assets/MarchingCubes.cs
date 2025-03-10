@@ -98,6 +98,7 @@ public static class MarchingCubes
 
         Mesh mesh = new Mesh();
 
+
         
         //vertices of the mesh will be on edges
 
@@ -114,15 +115,21 @@ public static class MarchingCubes
         triangles = new List<int>();
         basePoint = centerPoint - gridSize/2f * gridStep * Vector3.one;
         visitedCubes = new bool[gridSize, gridSize, gridSize];
-
+        Debug.Log(surface.GetNumberOfSkeletons());
         for(int i = 0; i < surface.GetNumberOfSkeletons(); i++){
             GenerateConnectedComponent(FindComponentStartingCube(PositionToGridCoord(surface.GetSkeleton(i).position)));
         }
 
         mesh.vertices = edgePositions.ToArray();
         mesh.triangles = triangles.ToArray();
-        mesh.RecalculateNormals(); 
+        mesh.RecalculateNormals();
+     
 
+        DrawingUtilities.instance.Clear();
+        for(int i = 0; i < mesh.vertices.Length; i++){
+            DrawingUtilities.instance.DrawPrimitive(PrimitiveType.Sphere, mesh.vertices[i], 0.1f*gridStep*Vector3.one, i.ToString());
+            DrawingUtilities.instance.LabelObject(i.ToString(), i.ToString());
+        }
         return mesh; 
     }
     
