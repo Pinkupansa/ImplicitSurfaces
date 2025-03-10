@@ -302,7 +302,7 @@ public static class MCUtilities{
 		new GridCoord(1, 1, 1),
 	};
 
-	public static int[] doubleEdgeOffsetToEdgeIndex = new int[27]{-1, 0, -1, 8, -1, 9, -1, 4, -1, 3, -1, 1, -1, -1, -1, 7, -1, 5, -1, 2, -1, 11, -1, 10, -1, 6, -1};
+	//public static int[] doubleEdgeOffsetToEdgeIndex = new int[27]{-1, 0, -1, 8, -1, 9, -1, 4, -1, 3, -1, 1, -1, -1, -1, 7, -1, 5, -1, 2, -1, 11, -1, 10, -1, 6, -1};
 	public static GridCoord[][] neighboursWithCommonEdge = new GridCoord[][]{
 		new GridCoord[]{new GridCoord(0, -1, 0), new GridCoord(0, 0, -1), new GridCoord(0, -1, -1)},
 		new GridCoord[]{new GridCoord(0, -1, 0), new GridCoord(1, 0, 0), new GridCoord(1, -1, 0)},

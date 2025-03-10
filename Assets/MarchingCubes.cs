@@ -61,7 +61,7 @@ public static class MarchingCubes
             //calculate the global coords of the edge extremities 
             int[] edgeExtLocalIndices = MCUtilities.edgeTable[localTriangles[i]];
 
-            int edgeIndex = -1;
+            int edgeIndex;
             if(!FindOrAddEdgeMeshIndex(currentCoord, localTriangles[i], out edgeIndex)){
                 GridCoord ext1GridCoord = currentCoord + MCUtilities.vertexOffsets[edgeExtLocalIndices[0]];
                 GridCoord ext2GridCoord = currentCoord + MCUtilities.vertexOffsets[edgeExtLocalIndices[1]];
@@ -74,16 +74,22 @@ public static class MarchingCubes
      
 
     static bool FindOrAddEdgeMeshIndex(GridCoord cube, int edgeLocalIndex, out int edgeIndex){ 
+        int localSave = edgeIndices[cube.x, cube.y, cube.z, edgeLocalIndex];
+        
+        if(localSave != 0) {edgeIndex = localSave; return true;}
         for(int i = 0; i < 3; i++){
             GridCoord neighbour = cube + MCUtilities.neighboursWithCommonEdge[edgeLocalIndex][i];
             if(!IsInsideGrid(neighbour) || !visitedCubes[neighbour.x, neighbour.y, neighbour.z]) continue; 
 
             int index = edgeIndices[neighbour.x, neighbour.y, neighbour.z, MCUtilities.localIndexInNeighbours[edgeLocalIndex][i]];
+            
             if(index != 0){
+                edgeIndices[cube.x, cube.y, cube.z, edgeLocalIndex] = index;
                 edgeIndex = index;
                 return true;
             }
         }
+        
         //edge index has not been found 
         int newIndex = edgePositions.Count + 1;
         edgeIndices[cube.x, cube.y, cube.z, edgeLocalIndex] = newIndex;
@@ -125,11 +131,11 @@ public static class MarchingCubes
         mesh.RecalculateNormals();
      
 
-        DrawingUtilities.instance.Clear();
+        /*DrawingUtilities.instance.Clear();
         for(int i = 0; i < mesh.vertices.Length; i++){
             DrawingUtilities.instance.DrawPrimitive(PrimitiveType.Sphere, mesh.vertices[i], 0.1f*gridStep*Vector3.one, i.ToString());
             DrawingUtilities.instance.LabelObject(i.ToString(), i.ToString());
-        }
+        }*/
         return mesh; 
     }
     

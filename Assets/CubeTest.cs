@@ -23,11 +23,18 @@ public class CubeTest : MonoBehaviour
 
             DrawingUtilities.instance.currentColor = Color.red;
             DrawingUtilities.instance.DrawPrimitive(PrimitiveType.Sphere, MCUtilities.edgeOffsets[i], 0.09f*Vector3.one, name + " center");
-            DrawingUtilities.instance.LabelObject(name + " center", i.ToString());
+            DrawingUtilities.instance.LabelObject(name + " center", i.ToString() + " " + MCUtilities.localIndexInNeighbours[i][0].ToString() + " " + MCUtilities.localIndexInNeighbours[i][1].ToString() + " " + MCUtilities.localIndexInNeighbours[i][2].ToString());
+
+            DrawingUtilities.instance.currentColor = Color.red; 
+            DrawingUtilities.instance.DrawLine(MCUtilities.edgeOffsets[i], MCUtilities.edgeOffsets[i] + (Vector3)MCUtilities.neighboursWithCommonEdge[i][0] * 0.25f, 0.01f, name + " l1");
+            DrawingUtilities.instance.currentColor = Color.green; 
+            DrawingUtilities.instance.DrawLine(MCUtilities.edgeOffsets[i], MCUtilities.edgeOffsets[i] + (Vector3)MCUtilities.neighboursWithCommonEdge[i][1] * 0.25f, 0.01f, name + " l2");
+            DrawingUtilities.instance.currentColor = Color.blue; 
+            DrawingUtilities.instance.DrawLine(MCUtilities.edgeOffsets[i], MCUtilities.edgeOffsets[i] + (Vector3)MCUtilities.neighboursWithCommonEdge[i][2] * 0.25f, 0.01f, name + " l3");
             DrawingUtilities.instance.currentColor = Color.green;
         }
 
-        DrawCubeCase(134);
+        //DrawCubeCase(134);
         
     }
 
