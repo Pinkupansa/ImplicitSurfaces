@@ -11,7 +11,8 @@ public class ImplicitSurface : MonoBehaviour
     [SerializeField] bool debugDraw = false;
     [SerializeField] Material material;
     void Start(){
-        SkeletonData[] skeletons = GetComponentsInChildren<Skeleton>().Select(x => x.GetData()).ToArray(); 
+        SkeletonData[] skeletons = GetComponentsInChildren<Skeleton>().Select(x => x.GetData()).ToArray();
+        Debug.Log(skeletons.Length); 
         data.SetSkeletons(skeletons);
 
     }
@@ -72,8 +73,10 @@ public class ImplicitSurfaceData{
     public float EvaluatePot(Vector3 point){
         float sumPot = 0;
         foreach(SkeletonData s in skeletons){
-           float pot = ISUtilities.EvaluateQuarticMetaballPotential(((point - s.position)/s.scale).sqrMagnitude); 
-           sumPot += pot;
+            float d = Vector3.Distance(point, s.position)/s.scale;
+
+            float pot = ISUtilities.EvaluateQuarticMetaballPotential(d*d); 
+            sumPot += pot;
         }
         return sumPot;
     }

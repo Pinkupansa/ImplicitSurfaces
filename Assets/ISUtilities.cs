@@ -43,7 +43,7 @@ public static class ISUtilities
     }
 
     public static float EvaluateQuarticMetaballPotential(float r2){
-        if(r2 > 0.49) return 0;
+        if(r2 > 0.49f) return 0;
         return r2*(r2-1) + 0.25f;
     }
 

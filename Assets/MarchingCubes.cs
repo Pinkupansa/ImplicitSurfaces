@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.IO.Compression;
-using NUnit.Framework;
 using UnityEngine;
 
 public static class MarchingCubes 
@@ -121,13 +119,13 @@ public static class MarchingCubes
         triangles = new List<int>();
         basePoint = centerPoint - gridSize/2f * gridStep * Vector3.one;
         visitedCubes = new bool[gridSize, gridSize, gridSize];
-        Debug.Log(surface.GetNumberOfSkeletons());
         for(int i = 0; i < surface.GetNumberOfSkeletons(); i++){
             GenerateConnectedComponent(FindComponentStartingCube(PositionToGridCoord(surface.GetSkeleton(i).position)));
         }
 
         mesh.vertices = edgePositions.ToArray();
         mesh.triangles = triangles.ToArray();
+
         mesh.RecalculateNormals();
      
 
